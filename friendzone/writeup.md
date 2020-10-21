@@ -1,12 +1,14 @@
 ## Notes & Writeup for the Friendzonebox
 
+# Checking open ports
+
 Run the following command to check for open ports:
 
 ```shell
 nmap -A -sC -sV 10.10.10.123
 ```
 
-This resulted in the following nmap out
+This resulted in the following nmap output
 
 ```shell
 Starting Nmap 7.80 ( https://nmap.org ) at 2020-10-21 01:20 CEST
@@ -61,11 +63,46 @@ Host script results:
 |   date: 2020-10-20T23:21:02
 |_  start_date: N/A
 ```
+From this output sevral things can be deducted:
 
-Several things become clear from this result:
+1) Port 21 is open for ftp running [vsftpd 3.0.3](https://en.wikipedia.org/wiki/Vsftpd)
+2) Port 22 is open for ssh running [OpenSHH 7.6](https://www.openssh.com/)
+3) Port 53 is open for DNS running [BIND 9.11.3](https://nl.wikipedia.org/wiki/BIND)
+- BIND is DNS server software so this machine is acting as a DNS server
+- This might mean that we could query the zone file of this DNS sever possibly containing addition domains if the DNS server is misconfigured
+4) Port 80 is open for HTTP running [Apache httpd 2.4.19](https://nl.wikipedia.org/wiki/Apache_(webserver))
+- Apache HTTP is a commonly used webserver, this indicated that a website is running via http on 10.10.10.123 (Hostmachine IP)
+5) Port 132 is open for SMB over NetBios running [Samba 3.x-4.x](https://en.wikipedia.org/wiki/Samba_(software))
+- Note that port 445 is also open for SMB over NetBios.
+6) Port 443 is open for https Running a different version of the Apache webserver
+- Http and https connections might lead to different websites
+- We also not that the https certificate list a different domain, namely: friendzone.red
 
-1) Port 21 is open running vsftpd 3.0.3 
-2) Port 22 is open running ssh
-3) port 53 is open running version 9.11.3 of BIND -> Bind is a DNS 
+# Finding vulnerabilities
 
-       
+First off I wanted to check if ftp allows anonymous login, so I ran the following command:
+
+```shell
+ftp 10.10.10.123
+```
+
+This however led to unsatifying results as anonymous login was disabled. Next I wanted to know more about the smb application running on port 132. Using the smbmap command:
+
+```shell
+smbmap -H 10.10.10.123
+````
+
+I was able to get the following output:
+
+```shell
+t session       IP: 10.10.10.123:445    Name: friendzoneportal.red                              
+        Disk                                                    Permissions     Comment
+	        ----                                                    -----------     -------
+		        print$                                                  NO ACCESS       Printer Drivers
+			        Files                                                   NO ACCESS       FriendZone Samba Server Files /etc/Files
+				        general                                                 READ ONLY       FriendZone Samba Server Files
+					        Development                                             READ, WRITE     FriendZone Samba Server Files
+						        IPC$                                                    NO ACCESS       IPC Service (FriendZone server (Samba, Ubuntu)
+```
+
+
