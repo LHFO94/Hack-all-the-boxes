@@ -171,4 +171,18 @@ After adding all the domains to my hostfile in /ect/hosts i found the admin logi
 
 ![Admin page](admin.png)
 
+Playing around with the parameters eventualy led me to get the following screen using <https://administrator1.friendzone.red/dashboard.php?image_id.jpg&pagename=dashboard.php>.
+
+![Param_php](friendzone_param.png)
+
+Being able to play around with the parameters in urls could indicate the following vulerabilities:
+
+
+
+
+
+# LFI vulernability
+
+[LFI](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/File%20Inclusion#wrapper-phpfilter)
+
 
